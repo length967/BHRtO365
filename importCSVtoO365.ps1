@@ -7,14 +7,19 @@ $csv | ForEach-Object{
     $LastFirst = $_."Last Name, First Name"
     $WorkPhone = $_."Work Phone"
     $Office = $_.Location
-    $City = $Office.split(',')[0]
-    $State = $Office.split(',')[1].TrimStart()
+    $City = ""
+    $State = ""
+    if($Office -like '*,*'){
+            $City = $Office.split(',')[0]
+            $State = $Office.split(',')[1].TrimStart()
+        }else{
+            $City = $Office
+        }
     $Department = $_.Department
     $JobTitle = $_."Job Title"
     $split = $LastFirst.split(',')
     $Last = $split[0]
     $First = $split[1].TrimStart()
-    $Initials = $First.toCharArray()[0] + $Last.toCharArray()[0]
     $DisplayName = $First + " " + $Last
     $ManagerName = $_."Reporting to"
     $ManagerSplit = $ManagerName.split(" ")
@@ -28,10 +33,9 @@ $csv | ForEach-Object{
     Write-Host "Jobtitle: " $JobTitle
     Write-Host "First Name: " $First
     Write-Host "Last Name: " $Last
-    Write-Host "Initials: " $Initials
     Write-Host "Display Name: " $DisplayName
     Write-Host "Manager ID : " $ManagerID
-    Set-User -Identity $ID  -City $office.split(',')[0] -Company "Microscan" -Department $Department -DisplayName $DisplayName -FirstName $First -Initials $Initials -LastName $Last -Manager $ManagerID -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
+    Set-User -Identity $ID  -City $City -Company "Microscan" -Department $Department -FirstName $First -LastName $Last -Manager $ManagerID -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
     sleep 1
 }
 Write-Host "Press any key to continue ..."
