@@ -27,6 +27,7 @@ $csv | ForEach-Object{
     }
     $Last = $split[0]
     $WorkPhone = $_."Work Phone"
+    $CellPhone = $_."Mobile Phone"
     $Office = $_.Location
     $City = ""
     $State = ""
@@ -42,6 +43,7 @@ $csv | ForEach-Object{
     $ManagerEmail = $EmailMap.$ManagerName
     Write-Host "ID: " $ID
     Write-Host "Work Phone: " $WorkPhone
+    Write-Host "Cell Phone: " $CellPhone
     Write-Host "Office:" $Office
     Write-Host "City: " $City
     Write-Host "State: " $State
@@ -51,7 +53,7 @@ $csv | ForEach-Object{
     Write-Host "Last Name: " $Last
     Write-Host "Manager: " $ManagerName 
     Write-Host "Manager ID : " $ManagerEmail
-    Set-User -Identity $ID  -City $City -Company "Microscan" -Department $Department -FirstName $First -LastName $Last -Manager $ManagerEmail -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
+    Set-User -Identity $ID  -City $City -Company "Microscan" -Department $Department -FirstName $First -LastName $Last -Manager $ManagerEmail -MobilePhone $CellPhone -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
     sleep 1
 }
 Write-Host "Press any key to continue ..."
