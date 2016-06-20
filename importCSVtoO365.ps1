@@ -23,7 +23,7 @@ $csv | ForEach-Object{
     $DisplayName = $First + " " + $Last
     $ManagerName = $_."Reporting to"
     $ManagerSplit = $ManagerName.split(" ")
-    $ManagerID = ($ManagerSplit[0].toCharArray()[0] + $ManagerSplit[1] -replace " ","" -replace "'", ''  + "@microscan.com") -replace ".com.cn" , ".com"
+    $ManagerID = ($ManagerSplit[0].toCharArray()[0] + ($ManagerSplit[1] -replace " ","" -replace "'", "")  + "@microscan.com") -replace ".com.cn" , ".com"
     Write-Host "ID: " $ID
     Write-Host "Work Phone: " $WorkPhone
     Write-Host "Office:" $Office
