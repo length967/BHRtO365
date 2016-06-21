@@ -68,22 +68,53 @@ $csv | ForEach-Object{
     $CurrentUser = get-user -Identity $ID
     $CurrentManager = $currentUser.manager.displayName
     if(!$CurrentManager) {$CurrentManager = (get-user -Identity $CurrentUser.manager).DisplayName}
-    $WorkPhoneChanged = $CellPhoneChanged = $OfficeChanged = $CityChanged = $StateChanged = $DepartmentChanged = $JobTitleChanged = $FirstNameChanged = $LastNameChanged = $ManagerChanged = $false
+    if(!$CurrentManager) {CurrentManager = ""}
+    $WorkPhoneChanged = $CellPhoneChanged = $OfficeChanged = $CityChanged = $StateChanged = $DepartmentChanged = $JobTitleChanged = $FirstNameChanged = $LastNameChanged = $ManagerChanged = ""
+    if($CurrentUser.FirstName -ne $First){
+        Set-User -Identity $ID -FirstName $First
+        $FirstNameChanged = "X"
+    }
+    if($CurrentUser.LastName -ne $Last){
+        Set-User -Identity $ID -LastName $Last
+        $LastNameChanged = "X"
+    }
     if($CurrentUser.phone -ne $WorkPhone){
         Set-User -Identity $ID -Phone $WorkPhone
-        $WorkPhoneChanged = $true
+        $WorkPhoneChanged = "X"
     }
     if($CurrentUser.MobilePhone -ne $CellPhone){
         Set-User -Identity $ID -MobilePhone $CellPhone
-        $CellPhoneChanged = $true
+        $CellPhoneChanged = "X"
     }
     if($CurrentUser.Office -ne $Office){
         Set-User -Identity $ID -Office $Office
-        $OfficeChanged = $true
+        $OfficeChanged = "X"
+    }
+    if($CurrentUser.City -ne $City){
+        Set-User -Identity $ID -City $City
+        $CityChanged = "X"
+    }
+    if($CurrentUser.StateOrProvince -ne $State){
+        Set-User -Identity $ID -StateOrProvince $State
+        $StateChanged = "X"
+    }
+    if($CurrentUser.Department -ne $Department){
+        Set-User -Identity $ID -Department $Department
+        $DepartmentChanged = "X"
+    }
+    if($CurrentUser.Title -ne $JobTitle){
+        Set-User -Identity $ID -Title $JobTitle
+        $JobTitleChanged = "X"
+    }
+    if($CurrentManager -ne $ManagerName){
+        Set-User -Identity $ID -Manager $ManagerID
+        $JobTitleChanged = "X"
     }
     Write-Host "Field Name |" "From CSV".padright($TPAD) "|" "Current/Old".padright($TPAD) "|Changed"
     Write-Host "--------------------------------------------------------------------------------------------------------------------"
     Write-Host "ID         |" $ID.padright($TPAD) "|" $CurrentUser.ID.padright($TPAD) "|" 
+    Write-Host "First Name |" $First.padright($TPAD) "|" $CurrentUser.FirstName.padright($TPAD) "|" $FirstNameChanged
+    Write-Host "Last Name  |" $Last.padright($TPAD) "|" $CurrentUser.LastName.padright($TPAD) "|" $LastNameChanged
     Write-Host "Work Phone |" $WorkPhone.padright($TPAD) "|" $CurrentUser.phone.padright($TPAD) "|" $WorkPhoneChanged
     Write-Host "Cell Phone |" $CellPhone.padright($TPAD) "|" $CurrentUser.MobilePhone.padright($TPAD) "|" $CellPhoneChanged
     Write-Host "Office     |" $Office.padright($TPAD) "|" $CurrentUser.Office.padright($TPAD) "|" $OfficeChanged
@@ -91,8 +122,6 @@ $csv | ForEach-Object{
     Write-Host "State      |" $State.padright($TPAD) "|" $CurrentUser.StateOrProvince.padright($TPAD) "|" $StateChanged
     Write-Host "Department |" $Department.padright($TPAD) "|" $CurrentUser.Department.padright($TPAD) "|" $DepartmentChanged
     Write-Host "JobTitle   |" $JobTitle.padright($TPAD) "|" $CurrentUser.Title.padright($TPAD) "|" $JobTitleChanged
-    Write-Host "First Name |" $First.padright($TPAD) "|" $CurrentUser.FirstName.padright($TPAD) "|" $FirstNameChanged
-    Write-Host "Last Name  |" $Last.padright($TPAD) "|" $CurrentUser.LastName.padright($TPAD) "|" $LastNameChanged
     Write-Host "Manager    |" $ManagerName.padright($TPAD) "|" $CurrentManager.padright($TPAD) "|" $ManagerChanged
     Write-Host ""
     Write-Host ""
