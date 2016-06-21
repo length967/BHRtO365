@@ -40,6 +40,14 @@ $csv | ForEach-Object{
 #Parses user data from the CSV, compare to current user data, then if different, finally sets it in exchange online
 $csv | ForEach-Object{
     $ID = $_.$ID_COL_NAME -replace "@.*\..*", ""
+    $CurrentUser = ""
+    Try {
+        $CurrentUser = Get-User -Identity $ID -ErrorAction Stop
+    }
+    Catch{
+        Write-Host "User: " $ID " was not found in O365 Database"
+        continue
+    }
     $LastFirst = $_.$LAST_FIRST_COL_NAME
     $split = $LastFirst.split(',')
     $First = ""
@@ -64,11 +72,12 @@ $csv | ForEach-Object{
     $JobTitle = $_.$JOB_TITLE_COL_NAME
     $ManagerName = $_.$MANAGER_NAME_COL_NAME
     $ManagerID = $EmailMap.$ManagerName
+    if(!$ManagerID) {$ManagerID = ""}
     $ManagerName = (get-user -Identity $ManagerID).DisplayName
-    $CurrentUser = get-user -Identity $ID
+    if(!$ManagerName) {$ManagerID = ""}
     $CurrentManager = $currentUser.manager.displayName
     if(!$CurrentManager) {$CurrentManager = (get-user -Identity $CurrentUser.manager).DisplayName}
-    if(!$CurrentManager) {CurrentManager = ""}
+    if(!$CurrentManager) {$CurrentManager = ""}
     $WorkPhoneChanged = $CellPhoneChanged = $OfficeChanged = $CityChanged = $StateChanged = $DepartmentChanged = $JobTitleChanged = $FirstNameChanged = $LastNameChanged = $ManagerChanged = ""
     if($CurrentUser.FirstName -ne $First){
         Set-User -Identity $ID -FirstName $First
