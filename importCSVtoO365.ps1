@@ -11,6 +11,9 @@ $JOB_TITLE_COL_NAME = "Job Title"
 $MANAGER_NAME_COL_NAME = "Reporting to"
 $COMPANY = "Microscan"
 
+#Other Constants
+$TPAD = 45
+
 #set up our office 365 session (will prompt for credientials for now)
 <#
 TODO: Set up service account and assign this script to it permentantly, maybe make credentials read out of a file?
@@ -21,7 +24,7 @@ Import-PSSession $office365session
 #Import our CSV file
 $csv = Import-CSV $csvFile
 
-#This map is used to resolve Supervisor names (Non-Nickname) to their email (sometimes starts with first letter of nickname, not real name)
+#This map is used to resolve Supervisor names (Non-Nickname) to their ID (sometimes starts with first letter of nickname, not real name)
 $EmailMap = @{}
 #Populate the map
 $csv | ForEach-Object{
@@ -30,22 +33,22 @@ $csv | ForEach-Object{
     $Last = $split[0]
     $First = $split[1].TrimStart()
     $First_Last = $First + " " + $Last
-    $EmailMap.Add($First_Last,$_."Work Email")
+    $EmailMap.Add($First_Last,($_."Work Email" -replace "@.*\..*", ""))
     Write-Host $First_Last " = " $EmailMap.$First_Last
 }
 
-#Parses user data from the CSV and then finally sets it in exchange online
+#Parses user data from the CSV, compare to current user data, then if different, finally sets it in exchange online
 $csv | ForEach-Object{
-    $ID = $_.$ID_COL_NAME
+    $ID = $_.$ID_COL_NAME -replace "@.*\..*", ""
     $LastFirst = $_.$LAST_FIRST_COL_NAME
     $split = $LastFirst.split(',')
     $First = ""
+    $Last = $split[0]
     if($_.$NICKNAME_COL_NAME -eq ""){
         $First = $split[1].TrimStart()
     }else{
         $First = $_.$NICKNAME_COL_NAME
     }
-    $Last = $split[0]
     $WorkPhone = $_.$WORK_PHONE_COL_NAME
     $CellPhone = $_.$MOBILE_PHONE_COL_NAME
     $Office = $_.$LOCATION_COL_NAME
@@ -60,20 +63,40 @@ $csv | ForEach-Object{
     $Department = $_.$DEPARTMENT_COL_NAME
     $JobTitle = $_.$JOB_TITLE_COL_NAME
     $ManagerName = $_.$MANAGER_NAME_COL_NAME
-    $ManagerEmail = $EmailMap.$ManagerName
-    Write-Host "ID:         " $ID
-    Write-Host "Work Phone: " $WorkPhone
-    Write-Host "Cell Phone: " $CellPhone
-    Write-Host "Office:     " $Office
-    Write-Host "City:       " $City
-    Write-Host "State:      " $State
-    Write-Host "Department: " $Department
-    Write-Host "Jobtitle:   " $JobTitle
-    Write-Host "First Name: " $First
-    Write-Host "Last Name:  " $Last
-    Write-Host "Manager:    " $ManagerName 
-    Write-Host "Manager ID: " $ManagerEmail
-    Set-User -Identity $ID  -City $City -Company $COMPANY -Department $Department -FirstName $First -LastName $Last -Manager $ManagerEmail -MobilePhone $CellPhone -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
+    $ManagerID = $EmailMap.$ManagerName
+    $ManagerName = (get-user -Identity $ManagerID).DisplayName
+    $CurrentUser = get-user -Identity $ID
+    $CurrentManager = $currentUser.manager.displayName
+    if(!$CurrentManager) {$CurrentManager = (get-user -Identity $CurrentUser.manager).DisplayName}
+    $WorkPhoneChanged = $CellPhoneChanged = $OfficeChanged = $CityChanged = $StateChanged = $DepartmentChanged = $JobTitleChanged = $FirstNameChanged = $LastNameChanged = $ManagerChanged = $false
+    if($CurrentUser.phone -ne $WorkPhone){
+        Set-User -Identity $ID -Phone $WorkPhone
+        $WorkPhoneChanged = $true
+    }
+    if($CurrentUser.MobilePhone -ne $CellPhone){
+        Set-User -Identity $ID -MobilePhone $CellPhone
+        $CellPhoneChanged = $true
+    }
+    if($CurrentUser.Office -ne $Office){
+        Set-User -Identity $ID -Office $Office
+        $OfficeChanged = $true
+    }
+    Write-Host "Field Name |" "From CSV".padright($TPAD) "|" "Current/Old".padright($TPAD) "|Changed"
+    Write-Host "--------------------------------------------------------------------------------------------------------------------"
+    Write-Host "ID         |" $ID.padright($TPAD) "|" $CurrentUser.ID.padright($TPAD) "|" 
+    Write-Host "Work Phone |" $WorkPhone.padright($TPAD) "|" $CurrentUser.phone.padright($TPAD) "|" $WorkPhoneChanged
+    Write-Host "Cell Phone |" $CellPhone.padright($TPAD) "|" $CurrentUser.MobilePhone.padright($TPAD) "|" $CellPhoneChanged
+    Write-Host "Office     |" $Office.padright($TPAD) "|" $CurrentUser.Office.padright($TPAD) "|" $OfficeChanged
+    Write-Host "City       |" $City.padright($TPAD) "|" $CurrentUser.City.padright($TPAD) "|" $CityChanged
+    Write-Host "State      |" $State.padright($TPAD) "|" $CurrentUser.StateOrProvince.padright($TPAD) "|" $StateChanged
+    Write-Host "Department |" $Department.padright($TPAD) "|" $CurrentUser.Department.padright($TPAD) "|" $DepartmentChanged
+    Write-Host "JobTitle   |" $JobTitle.padright($TPAD) "|" $CurrentUser.Title.padright($TPAD) "|" $JobTitleChanged
+    Write-Host "First Name |" $First.padright($TPAD) "|" $CurrentUser.FirstName.padright($TPAD) "|" $FirstNameChanged
+    Write-Host "Last Name  |" $Last.padright($TPAD) "|" $CurrentUser.LastName.padright($TPAD) "|" $LastNameChanged
+    Write-Host "Manager    |" $ManagerName.padright($TPAD) "|" $CurrentManager.padright($TPAD) "|" $ManagerChanged
+    Write-Host ""
+    Write-Host ""
+   # Set-User -Identity $ID  -City $City -Company $COMPANY -Department $Department -FirstName $First -LastName $Last -Manager $ManagerID -MobilePhone $CellPhone -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
     sleep 1
 }
 Write-Host "Press any key to continue ..."
