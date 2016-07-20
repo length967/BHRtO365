@@ -18,6 +18,7 @@ $TPAD = 45
 <#
 TODO: Set up service account and assign this script to it permentantly, maybe make credentials read out of a file?
  #>
+$cred = Get-Credential
 $office365session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://outlook.office365.com/powershell-liveid/" -Credential $cred -Authentication Basic -AllowRedirection
 Import-PSSession $office365session
 
