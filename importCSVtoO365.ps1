@@ -10,6 +10,8 @@ $DEPARTMENT_COL_NAME = "Department"
 $JOB_TITLE_COL_NAME = "Job Title"
 $MANAGER_NAME_COL_NAME = "Reporting to"
 $COMPANY = "Microscan"
+$US_STATE_NAMES = "Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"
+$US_STATE_ABBRV =  "AK","AL","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"
 
 #Other Constants
 $TPAD = 45
@@ -40,7 +42,7 @@ $csv | ForEach-Object{
 
 #Parses user data from the CSV, compare to current user data, then if different, finally sets it in exchange online
 $csv | ForEach-Object{
-    $ID = $_.$ID_COL_NAME -replace "@.*\..*", ""
+    $ID = $_.$ID_COL_NAME
     $CurrentUser = ""
     Try {
         $CurrentUser = Get-User -Identity $ID -ErrorAction Stop
@@ -61,6 +63,25 @@ $csv | ForEach-Object{
     $WorkPhone = $_.$WORK_PHONE_COL_NAME
     $CellPhone = $_.$MOBILE_PHONE_COL_NAME
     $Office = $_.$LOCATION_COL_NAME
+    #US and remote US user detection
+    $US_STATE_NAMES | ForEach-Object{
+        if($Office -like ("*"+$_+"*")){
+            Write-Host $Office, " = ", $_
+            Set-Mailbox -Identity $ID -CustomAttribute2 "USUSER"
+            if($Office -notlike "*WA" -and $Office -notlike "*NH"){
+            Set-Mailbox -Identity $ID -CustomAttribute3 "REMOTE"
+            }
+        }
+    }
+    $US_STATE_ABBRV | ForEach-Object{
+        if($Office -like ("*",$_) -and $Offce -notlike "*india*" -and $Office -notlike "*Alphen*" -and $Office -notlike "*China*"){
+            Write-Host $Office, " = ", $_
+            Set-Mailbox -Identity $ID -CustomAttribute2 "USUSER"
+            if($Office -notlike "*WA" -and $Office -notlike "*NH"){
+            Set-Mailbox -Identity $ID -CustomAttribute3 "REMOTE"
+            }
+        }
+    }
     $City = ""
     $State = ""
     if($Office -like '*,*'){
@@ -120,6 +141,7 @@ $csv | ForEach-Object{
         Set-User -Identity $ID -Manager $ManagerID
         $JobTitleChanged = "X"
     }
+    Set-Mailbox -Identity $ID -CustomAttribute1 "USER"
     Write-Host "Field Name |" "From CSV".padright($TPAD) "|" "Current/Old".padright($TPAD) "|Changed"
     Write-Host "--------------------------------------------------------------------------------------------------------------------"
     Write-Host "ID         |" $ID.padright($TPAD) "|" $CurrentUser.ID.padright($TPAD) "|" 
