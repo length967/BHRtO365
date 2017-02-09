@@ -2,7 +2,7 @@ param([String]$csvFile="bamboohr.csv")
 #setup CSV Field Constants
 $ID_COL_NAME = "Work Email"
 $LAST_FIRST_COL_NAME = "Last Name, First Name"
-$NICKNAME_COL_NAME = "Nickname"
+$NICKNAME_COL_NAME = "Preferred Name"
 $WORK_PHONE_COL_NAME = "Work Phone"
 $MOBILE_PHONE_COL_NAME = "Mobile Phone"
 $LOCATION_COL_NAME = "Location"
@@ -94,12 +94,12 @@ $csv | ForEach-Object{
     $JobTitle = $_.$JOB_TITLE_COL_NAME
     $ManagerName = $_.$MANAGER_NAME_COL_NAME
     $ManagerID = $EmailMap.$ManagerName
-    if(!$ManagerID) {$ManagerID = ""}
+    if(!$ManagerID) {$ManagerID = " "}
     $ManagerName = (get-user -Identity $ManagerID).DisplayName
-    if(!$ManagerName) {$ManagerID = ""}
+    if($ManagerName -eq $null) {$ManagerID = " "}
     $CurrentManager = $currentUser.manager.displayName
     if(!$CurrentManager) {$CurrentManager = (get-user -Identity $CurrentUser.manager).DisplayName}
-    if(!$CurrentManager) {$CurrentManager = ""}
+    if($CurrentManager -eq $null) {$CurrentManager = " "}
     $WorkPhoneChanged = $CellPhoneChanged = $OfficeChanged = $CityChanged = $StateChanged = $DepartmentChanged = $JobTitleChanged = $FirstNameChanged = $LastNameChanged = $ManagerChanged = ""
     if($CurrentUser.FirstName -ne $First){
         Set-User -Identity $ID -FirstName $First
