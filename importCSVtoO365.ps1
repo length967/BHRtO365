@@ -1,5 +1,5 @@
 param([String]$csvFile="bamboohr.csv")
-#setup CSV Field Constants
+#setup CSV Field Constants, change these if it changes
 $ID_COL_NAME = "Work Email"
 $LAST_FIRST_COL_NAME = "Last Name, First Name"
 $NICKNAME_COL_NAME = "Preferred Name"
@@ -96,11 +96,13 @@ $csv | ForEach-Object{
     $ManagerID = $EmailMap.$ManagerName
     if(!$ManagerID) {$ManagerID = " "}
     $ManagerName = (get-user -Identity $ManagerID).DisplayName
-    if($ManagerName -eq $null) {$ManagerID = " "}
+    if($ManagerName -eq $null) {$ManagerName = " "}  #prevent error in table printing from null name
     $CurrentManager = $currentUser.manager.displayName
-    if(!$CurrentManager) {$CurrentManager = (get-user -Identity $CurrentUser.manager).DisplayName}
-    if($CurrentManager -eq $null) {$CurrentManager = " "}
+    if(!$CurrentManager) {$CurrentManager = (get-user -Identity $CurrentUser.manager).DisplayName}  #get current manager from server if not found in map we created.
+    if($CurrentManager -eq $null) {$ManagerName = " "}
+    if($CurrentManager.length -gt 75) {$CurrentManager = " "} #prevent error in table printing from null name
     $WorkPhoneChanged = $CellPhoneChanged = $OfficeChanged = $CityChanged = $StateChanged = $DepartmentChanged = $JobTitleChanged = $FirstNameChanged = $LastNameChanged = $ManagerChanged = ""
+    #if we have changes make them and mark for table output.
     if($CurrentUser.FirstName -ne $First){
         Set-User -Identity $ID -FirstName $First
         $FirstNameChanged = "X"
@@ -114,7 +116,7 @@ $csv | ForEach-Object{
         $WorkPhoneChanged = "X"
     }
     if($CurrentUser.MobilePhone -ne $CellPhone){
-        Set-User -Identity $ID -MobilePhone $CellPhone
+        Set-User -dIentity $ID -MobilePhone $CellPhone
         $CellPhoneChanged = "X"
     }
     if($CurrentUser.Office -ne $Office){
@@ -141,6 +143,7 @@ $csv | ForEach-Object{
         Set-User -Identity $ID -Manager $ManagerID
         $JobTitleChanged = "X"
     }
+    #print out a table detailing changes....
     Set-Mailbox -Identity $ID -CustomAttribute1 "USER"
     Write-Host "Field Name |" "From CSV".padright($TPAD) "|" "Current/Old".padright($TPAD) "|Changed"
     Write-Host "--------------------------------------------------------------------------------------------------------------------"
@@ -157,7 +160,7 @@ $csv | ForEach-Object{
     Write-Host "Manager    |" $ManagerName.padright($TPAD) "|" $CurrentManager.padright($TPAD) "|" $ManagerChanged
     Write-Host ""
     Write-Host ""
-   # Set-User -Identity $ID  -City $City -Company $COMPANY -Department $Department -FirstName $First -LastName $Last -Manager $ManagerID -MobilePhone $CellPhone -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
+   # old code Set-User -Identity $ID  -City $City -Company $COMPANY -Department $Department -FirstName $First -LastName $Last -Manager $ManagerID -MobilePhone $CellPhone -Office $Office -Phone $WorkPhone -StateOrProvince $State -Title $JobTitle -Verbose
 }
 Write-Host "Press any key to continue ..."
 $x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
