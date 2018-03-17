@@ -95,7 +95,7 @@ $csv | ForEach-Object{
         $WorkPhoneChanged = "X"
     }
     if($CurrentUser.MobilePhone -ne $CellPhone){
-        Set-User -dIentity $ID -MobilePhone $CellPhone
+        Set-User -Identity $ID -MobilePhone $CellPhone
         $CellPhoneChanged = "X"
     }
     if($CurrentUser.Office -ne $Office){
