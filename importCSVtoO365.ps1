@@ -17,10 +17,11 @@ $TPAD = 45
 #set up our office 365 session (will prompt for credientials for now)
 <#
 TODO: Set up service account and assign this script to it permentantly, maybe make credentials read out of a file?
- #>
+ 
 $cred = Get-Credential
 $office365session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri "https://outlook.office365.com/powershell-liveid/" -Credential $cred -Authentication Basic -AllowRedirection
 Import-PSSession $office365session
+#>
 
 #Import our CSV file
 $csv = Import-CSV $csvFile
